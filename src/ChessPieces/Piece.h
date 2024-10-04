@@ -11,13 +11,13 @@
 class ChessBoard;
 
 enum class PieceType {
-    KING,  QUEEN,  PAWN,
-    ROOK,  BISHOP, KNIGHT,
+    KING = 0,  QUEEN  = 1, PAWN   = 2,
+    ROOK = 3,  BISHOP = 4, KNIGHT = 5,
 };
 
 enum class PieceColor {
-    WHITE_COLOR,
-    BLACK_COLOR
+    WHITE_COLOR = 0,
+    BLACK_COLOR = 1
 };
 
 class Piece {

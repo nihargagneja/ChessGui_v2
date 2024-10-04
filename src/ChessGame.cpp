@@ -21,12 +21,7 @@ void ChessGame::initGame() {
     SetTargetFPS(60);
 
     m_board.setUp();
-
-    // m_board.executeMove(ChessMove{
-    //     {4, 4},
-    //     {3, 3},
-    //     MoveType::CAPTURE
-    // });
+    // m_board.generateRandomConfiguration();
 }
 
 void ChessGame::gameLoop() {
@@ -43,9 +38,9 @@ void ChessGame::gameLoop() {
         if(IsKeyDown(KEY_ENTER) ) { enterPressed = true; }
         else { enterPressed  = false; }
 
-        if(m_board.kingIsInCheckInCurrentBoardState(PieceColor::BLACK_COLOR)) {
-            DrawRectangle(0, 0, 800, 800, Color(255, 0, 0, 40));
-        }
+        // if(m_board.kingIsInCheckInCurrentBoardState(PieceColor::BLACK_COLOR)) {
+        //     DrawRectangle(0, 0, 800, 800, Color(255, 0, 0, 40));
+        // }
 
         EndDrawing();
     }
@@ -68,9 +63,14 @@ void ChessGame::processInput() {
 void ChessGame::onMouseClick() {
         Vector2i tileUnderMouse = Vector2i {GetMouseX() / TILE_WIDTH,GetMouseY() / TILE_HEIGHT };
         std::cout << tileUnderMouse.x << " " << tileUnderMouse.y << std::endl;
-        if(m_board.pieceExistsAt( tileUnderMouse )) {
+
+        if(m_board.pieceExistsAt( tileUnderMouse ) && m_guiState.selectedPiece == nullptr) {
             m_guiState.selectedPiece = m_board.getPieceAt(tileUnderMouse);
             m_guiState.positionOfSelectedPiece = tileUnderMouse;
+        } else if (m_board.pieceExistsAt(tileUnderMouse) && m_guiState.selectedPiece != nullptr) {
+            m_guiState.selectedPiece = m_board.getPieceAt(tileUnderMouse);
+            m_guiState.positionOfSelectedPiece = tileUnderMouse;
+
         }
 }
 

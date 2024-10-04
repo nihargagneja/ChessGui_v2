@@ -19,7 +19,7 @@ std::vector<ChessMove> PieceKing::availableMoves(Vector2i position) const {
         Vector2i(position.x + 1, position.y + 0),
         Vector2i(position.x + 1, position.y + 1),
         Vector2i(position.x + 0, position.y + 1),
-        Vector2i(position.x - 1, position.y - 1),
+        Vector2i(position.x - 1, position.y + 1),
         Vector2i(position.x - 1, position.y + 0)
     };
 

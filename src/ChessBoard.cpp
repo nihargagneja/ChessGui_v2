@@ -173,20 +173,49 @@ void ChessBoard::setUp() {
     m_pieces[1][7] = std::make_shared<PieceKnight>    (PieceColor::WHITE_COLOR, this);
     m_pieces[2][7] = std::make_shared<PieceBishop>    (PieceColor::WHITE_COLOR, this);
     m_pieces[3][7] = std::make_shared<PieceQueen>     (PieceColor::WHITE_COLOR, this);
-    m_pieces[4][7] = std::make_shared<PieceKing>      (PieceColor::WHITE_COLOR, this);
+    // m_pieces[4][7] = std::make_shared<PieceKing>      (PieceColor::WHITE_COLOR, this);
     m_pieces[5][7] = std::make_shared<PieceBishop>    (PieceColor::WHITE_COLOR, this);
     m_pieces[6][7] = std::make_shared<PieceKnight>    (PieceColor::WHITE_COLOR, this);
     m_pieces[7][7] = std::make_shared<PieceRook>      (PieceColor::WHITE_COLOR, this);
 
     m_pieces[4][4] = std::make_shared<PieceBishop>     (PieceColor::WHITE_COLOR, this);
     m_pieces[3][3] = std::make_shared<PieceKing>      (PieceColor::BLACK_COLOR, this);
+    m_pieces[6][3] = std::make_shared<PieceKing>      (PieceColor::WHITE_COLOR, this);
+
 
 }
 
 void ChessBoard::generateRandomConfiguration() {
     for (auto & row : m_pieces) {
         for (auto & piece : row) {
+            auto shouldDrawPiece = GetRandomValue(0, 10) < 5;
+            auto pieceType = GetRandomValue(0, 5);
+            auto pieceColor = GetRandomValue(0, 1);
 
+            if (shouldDrawPiece) {
+            switch(pieceType) {
+                case static_cast<int>(PieceType::PAWN):
+                    piece = std::make_shared<PiecePawn>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                break;
+                case static_cast<int>(PieceType::KNIGHT):
+                    piece = std::make_shared<PieceKnight>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                case static_cast<int>(PieceType::BISHOP):
+                    piece = std::make_shared<PieceBishop>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                break;
+                case static_cast<int>(PieceType::KING):
+                    piece = std::make_shared<PieceKing>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                break;
+                case static_cast<int>(PieceType::ROOK):
+                    piece = std::make_shared<PieceRook>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                break;
+                case static_cast<int>(PieceType::QUEEN):
+                    piece = std::make_shared<PieceQueen>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                break;
+                default:
+                    piece = nullptr;
+                break;
+            }
+            }
         }
     }
 }

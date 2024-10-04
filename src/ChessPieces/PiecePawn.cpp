@@ -26,7 +26,8 @@ std::vector<ChessMove> PiecePawn::availableMoves(Vector2i position) const {
     }
 
     // TWO FORWARD IF FIRST MOVE
-    if (!m_hasMoved) {
+    if (m_color == PieceColor::BLACK_COLOR && position.y == 1 ||
+        m_color == PieceColor::WHITE_COLOR && position.y == 6) {
         destination.x = position.x;
         if (m_color == PieceColor::WHITE_COLOR) {
             destination.y = position.y - 2;

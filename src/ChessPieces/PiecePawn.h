@@ -9,7 +9,8 @@
 
 class PiecePawn : public Piece {
 private:
-    bool m_hasMoved = false;
+    // bool m_hasMoved = false; // refactored availableMoves to use the color and column of the pawn rather
+                                // having more complexity with a member variable
 
 protected:
 
