@@ -1,0 +1,3 @@
+/Users/nihar/CLionProjects/ChessGUI_v2/cmake-build-debug/CMakeFiles/ChessGUI_v2.dir
+/Users/nihar/CLionProjects/ChessGUI_v2/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/nihar/CLionProjects/ChessGUI_v2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
