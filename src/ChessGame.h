@@ -25,9 +25,12 @@ private:
 
     // input processing
     void processInput();
-        void onMouseClick();
+        void onMouseLeftClick();
 
     void gameLoop();
+
+    void update();
+
     void terminateGame();
 
 public:

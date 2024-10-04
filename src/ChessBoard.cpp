@@ -26,8 +26,35 @@ Piece* ChessBoard::getPieceAt(const Vector2i position) const {
     return m_pieces[position.x][position.y].get();
 }
 
+
 Piece* ChessBoard::getPieceAt(const int x, const int y) const {
     return getPieceAt(Vector2i{x, y});
+}
+
+Piece* ChessBoard::getPieceByID(const int id) const {
+    for(int x = 0; x < 8; x++) {
+        for(int y = 0; y < 8; y++) {
+            auto piece = getPieceAt(Vector2i{x, y});
+            if(piece && getPieceAt(x, y)->getID() == id) {
+                return getPieceAt(x, y);
+            }
+        }
+    }
+
+    throw std::out_of_range("ChessBoard::getPieceByID");
+}
+
+Vector2i ChessBoard::getPiecePositionByID(const int id) const {
+    for(int x = 0; x < 8; x++) {
+        for(int y = 0; y < 8; y++) {
+            auto piece = getPieceAt(Vector2i{x, y});
+            if(piece && getPieceAt(x, y)->getID() == id) {
+                return Vector2i{x, y};
+            }
+        }
+    }
+
+    throw std::out_of_range("ChessBoard::getPieceByID");
 }
 
 std::vector<Vector2i> ChessBoard::getPositionsOf(PieceType pieceType, PieceColor pieceColor) const {
@@ -49,18 +76,20 @@ bool ChessBoard::inBounds(Vector2i position) {
     return position.x >= 0 && position.x < 8 && position.y >= 0 && position.y < 8;
 }
 
-// bool ChessBoard::moveWillCheckKing() {
-//     bool result = false;
-//
-//
-//     return result;
-// }
+bool ChessBoard::moveWillCheckKing(const ChessMove &move, const PieceColor kingColor) const {
+    ChessBoard boardAfterMove = *this;
 
-bool ChessBoard::kingIsInCheckInCurrentBoardState(PieceColor pieceColor) {
+    // check here about shallow copy vs deep copy
+    boardAfterMove.executeMove(move);
+    if(kingIsChecked(kingColor)) { return true; }
+    else { return false; }
+}
+
+bool ChessBoard::kingIsChecked(PieceColor kingColor) const {
     bool result = false;
 
     // find the kings position on the board
-    Vector2i kingPos = getPositionsOf(PieceType::KING, pieceColor).front();
+    Vector2i kingPos = getPositionsOf(PieceType::KING, kingColor).front();
 
     // if any ChessMoves on board have a destination
     // at the kings position and are of type CAPTURE
@@ -74,17 +103,16 @@ bool ChessBoard::kingIsInCheckInCurrentBoardState(PieceColor pieceColor) {
     return result;
 }
 
-
 // this private function does NOT check for if the king cant move there
 // because it is in check. That logic is handled by the public function getAllLegalMovesOnBoard
-std::vector<ChessMove> ChessBoard::getMovesOfAllPieces() {
+std::vector<ChessMove> ChessBoard::getMovesOfAllPieces() const {
     std::vector<ChessMove> movesOfAllPieces = {};
 
     for(int x = 0; x < 8; ++x) {
         for(int y = 0; y < 8; ++y) {
             auto piece = getPieceAt(x, y);
             if(piece != nullptr) {
-                std::vector<ChessMove> movesOfPiece = piece->availableMoves(Vector2i {x, y});
+                std::vector<ChessMove> movesOfPiece = piece->availableMoves();
                 movesOfAllPieces.insert(
                     movesOfAllPieces.end(),
                     movesOfPiece.begin(),
@@ -110,14 +138,19 @@ std::vector<ChessMove> ChessBoard::getAllLegalMovesOnBoard() {
 }
 
 void ChessBoard::executeMove(const ChessMove& move) {
-    if(move.type == MoveType::CAPTURE) {
-        capturedPieces.push_back(m_pieces[move.endPosition.x][move.endPosition.y]); // captured piece goes off board
-        //m_pieces[move.endPosition.x][move.endPosition.y] = m_pieces[move.startPosition.x][move.startPosition.y];
-        // m_pieces[move.startPosition.x][move.startPosition.y] = nullptr;
+    if(move.type == MoveType::INTO_EMPTY) {
+        m_pieces[move.endPosition.x][move.endPosition.y] = m_pieces[move.startPosition.x][move.startPosition.y];
+        m_pieces[move.startPosition.x][move.startPosition.y] = nullptr;
+    } else if (move.type == MoveType::CAPTURE) {
+        m_capturedPieces.push_back(m_pieces[move.endPosition.x][move.endPosition.y]);
+        m_pieces[move.endPosition.x][move.endPosition.y] = m_pieces[move.startPosition.x][move.startPosition.y];
+        m_pieces[move.startPosition.x][move.startPosition.y] = nullptr;
+    } else if (move.type == MoveType::CASTLE) {
+        // need to implement
     }
 }
 
-void ChessBoard::draw(const Piece *selectedPiece, Vector2i posOfPiece) {
+void ChessBoard::draw(const Piece *selectedPiece) const {
     for(int row = 0;row < 8; ++row) {
         for(int col = 0; col < 8; ++col) {
             // draw tiles
@@ -133,7 +166,7 @@ void ChessBoard::draw(const Piece *selectedPiece, Vector2i posOfPiece) {
     }
 
     if(selectedPiece != nullptr) {
-        for (ChessMove move : selectedPiece->availableMoves(posOfPiece)) {
+        for (ChessMove move : selectedPiece->availableMoves()) {
             Color squareColor = (move.type == MoveType::CAPTURE) ? Color(ColorAlpha(RED, 0.4f)) : ColorAlpha(GREEN, 0.4f);
             DrawRectangle(move.endPosition.x * 100, move.endPosition.y * 100, 100, 100, squareColor);
         }
@@ -178,10 +211,9 @@ void ChessBoard::setUp() {
     m_pieces[6][7] = std::make_shared<PieceKnight>    (PieceColor::WHITE_COLOR, this);
     m_pieces[7][7] = std::make_shared<PieceRook>      (PieceColor::WHITE_COLOR, this);
 
-    m_pieces[4][4] = std::make_shared<PieceBishop>     (PieceColor::WHITE_COLOR, this);
+    m_pieces[4][4] = std::make_shared<PieceBishop>     (PieceColor::BLACK_COLOR, this);
     m_pieces[3][3] = std::make_shared<PieceKing>      (PieceColor::BLACK_COLOR, this);
     m_pieces[6][3] = std::make_shared<PieceKing>      (PieceColor::WHITE_COLOR, this);
-
 
 }
 
@@ -193,28 +225,28 @@ void ChessBoard::generateRandomConfiguration() {
             auto pieceColor = GetRandomValue(0, 1);
 
             if (shouldDrawPiece) {
-            switch(pieceType) {
-                case static_cast<int>(PieceType::PAWN):
-                    piece = std::make_shared<PiecePawn>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
-                break;
-                case static_cast<int>(PieceType::KNIGHT):
-                    piece = std::make_shared<PieceKnight>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
-                case static_cast<int>(PieceType::BISHOP):
-                    piece = std::make_shared<PieceBishop>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
-                break;
-                case static_cast<int>(PieceType::KING):
-                    piece = std::make_shared<PieceKing>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
-                break;
-                case static_cast<int>(PieceType::ROOK):
-                    piece = std::make_shared<PieceRook>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
-                break;
-                case static_cast<int>(PieceType::QUEEN):
-                    piece = std::make_shared<PieceQueen>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
-                break;
-                default:
-                    piece = nullptr;
-                break;
-            }
+                switch(pieceType) {
+                    case static_cast<int>(PieceType::PAWN):
+                        piece = std::make_shared<PiecePawn>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                    break;
+                    case static_cast<int>(PieceType::KNIGHT):
+                        piece = std::make_shared<PieceKnight>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                    case static_cast<int>(PieceType::BISHOP):
+                        piece = std::make_shared<PieceBishop>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                    break;
+                    case static_cast<int>(PieceType::KING):
+                        piece = std::make_shared<PieceKing>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                    break;
+                    case static_cast<int>(PieceType::ROOK):
+                        piece = std::make_shared<PieceRook>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                    break;
+                    case static_cast<int>(PieceType::QUEEN):
+                        piece = std::make_shared<PieceQueen>(pieceColor == 0 ? PieceColor::WHITE_COLOR : PieceColor::BLACK_COLOR, this);
+                    break;
+                    default:
+                        piece = nullptr;
+                    break;
+                }
             }
         }
     }

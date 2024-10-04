@@ -25,18 +25,26 @@ protected:
     PieceColor m_color;
     const ChessBoard* m_board;
 
+    static int m_idCounter; // each piece gets a serial id to query its position on the board
+    int m_id;
+
 public:
-    Piece(const PieceColor color, const ChessBoard* board) : m_color(color), m_board(board) {};
+    Piece(const PieceColor color, const ChessBoard* board) : m_color(color), m_board(board) {
+        m_id = m_idCounter++;
+    };
     virtual ~Piece() = default;
 
     // information
-    [[nodiscard]] virtual std::vector<ChessMove> availableMoves(Vector2i position) const = 0;
+    [[nodiscard]] virtual std::vector<ChessMove> availableMoves(Vector2i position) const = 0; // DEPRECATED
+    [[nodiscard]] virtual std::vector<ChessMove> availableMoves() const = 0; // USE THIS AND BOARD FOR POSITION USING ID
     [[nodiscard]] virtual PieceType getPieceType() const = 0;
     [[nodiscard]] bool sameColorAs(const Piece* otherPiece) const;
+    [[nodiscard]] Vector2i getPositionFromBoard();
 
-    // getters
+    // simple getters
     [[nodiscard]] virtual std::string getSymbol() const = 0;
     [[nodiscard]] PieceColor getColor() const { return m_color; }
+    [[nodiscard]] int getID() const { return m_id; }
 };
 
 
