@@ -8,12 +8,17 @@
 #include <Vector2i.h>
 #include <vector>
 
+#include "ChessPieces/Piece.h"
+#include "ChessPieces/Piece.h"
+
+enum class PieceType;
 enum class PieceColor;
 
 enum class MoveType {
     INTO_EMPTY,
     CAPTURE,
-    CASTLE
+    CASTLE,
+    UNKNOWN
 };
 
 struct ChessMove {
@@ -22,20 +27,25 @@ public:
     Vector2i endPosition;
     MoveType type;
 
-private:
-    // doesn't work, no way to tell the color of the piece that the move is from lmao
-    // static std::vector<ChessMove> filterByColor(const std::vector<ChessMove>& chessMoves, PieceColor pieceColor) {
-    //     std::vector<ChessMove> filteredChessMoves = {};
-    //
-    //     filteredChessMoves.reserve(chessMoves.size());
-    //     for (auto move: chessMoves) {
-    //         if (movel)
-    //         filteredChessMoves.push_back(move);
-    //     }
-    //     filteredChessMoves.shrink_to_fit();
-    //
-    //     return filteredChessMoves;
-    // };
+    // Utility functions
+    bool operator==(const ChessMove &other) const {
+        return  startPosition == other.startPosition &&
+                endPosition   == other.endPosition &&
+                type          == other.type;
+    }
+
+    [[nodiscard]] std::string toString() const {
+        std::string moveTypeStr;
+        switch (type) {
+            case MoveType::INTO_EMPTY: moveTypeStr = "INTO_EMPTY"; break;
+            case MoveType::CAPTURE: moveTypeStr = "CAPTURE"; break;
+            case MoveType::CASTLE: moveTypeStr = "CASTLE"; break;
+            case MoveType::UNKNOWN: moveTypeStr = "UNKNOWN"; break;
+        }
+        return "Move from (" + std::to_string(startPosition.x) + ", " + std::to_string(startPosition.y) +
+                    ") to (" + std::to_string(endPosition.x) + ", " + std::to_string(endPosition.y) +
+                    ") of type " + moveTypeStr;
+    }
 };
 
 

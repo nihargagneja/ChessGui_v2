@@ -9,9 +9,14 @@
 
 struct GUIState {
 public:
-    const Piece* selectedPiece;
+    Piece* selectedPiece;
     Vector2i positionOfSelectedPiece;
+    PieceColor activePlayer = PieceColor::WHITE_COLOR;
     GUIState() : selectedPiece(nullptr) {}
+
+    [[nodiscard]] bool pieceIsSelected() const { return selectedPiece != nullptr; }
+    void selectPiece(Piece* const pieceToSelect) { selectedPiece = pieceToSelect; }
+    void deselectPiece() { selectedPiece = nullptr; }
 };
 
 

@@ -10,7 +10,6 @@
 class PieceKnight : public Piece {
 protected:
 
-
 public:
     PieceKnight(PieceColor color, const ChessBoard *board) : Piece(color, board) {}
     [[nodiscard]] std::vector<ChessMove> availableMoves(Vector2i position) const override;
@@ -19,6 +18,8 @@ public:
     [[nodiscard]] std::string getSymbol() const override;
 
     [[nodiscard]] PieceType getPieceType() const override;
+
+    [[nodiscard]] std::shared_ptr<Piece> xerox() const override { return std::make_shared<PieceKnight>(*this); }
 };
 
 

@@ -16,6 +16,9 @@ public:
     [[nodiscard]] std::string getSymbol() const override;
 
     [[nodiscard]] PieceType getPieceType() const override;
+
+    [[nodiscard]] std::shared_ptr<Piece> xerox() const override { return std::make_shared<PieceBishop>(*this); }
+
 };
 
 

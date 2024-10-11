@@ -27,13 +27,11 @@ void ChessGame::initGame() {
 }
 
 void ChessGame::gameLoop() {
-    // next piece of this is really to be able to move pieces around or it will be hard to debug
-
-    bool enterPressed = false;
-
     while(!WindowShouldClose()) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
+
+        // GAME LOOP CORE
         update();
         draw();
         processInput();
@@ -43,7 +41,7 @@ void ChessGame::gameLoop() {
 }
 
 void ChessGame::update() {
-
+    // check the game state - checks winner loser
 }
 
 void ChessGame::draw() {
@@ -63,12 +61,58 @@ void ChessGame::onMouseLeftClick() {
         auto tileUnderMouse = Vector2i {GetMouseX() / TILE_WIDTH,GetMouseY() / TILE_HEIGHT };
         std::cout << tileUnderMouse.x << " " << tileUnderMouse.y << std::endl;
 
-        if(m_board.pieceExistsAt( tileUnderMouse ) && m_guiState.selectedPiece == nullptr) {
-            m_guiState.selectedPiece = m_board.getPieceAt(tileUnderMouse);
-            m_guiState.positionOfSelectedPiece = tileUnderMouse;
-        } else if (m_board.pieceExistsAt(tileUnderMouse) && m_guiState.selectedPiece != nullptr) {
-            m_guiState.selectedPiece = m_board.getPieceAt(tileUnderMouse);
-            m_guiState.positionOfSelectedPiece = tileUnderMouse;
+        // if a piece is already selected
+        if (m_guiState.pieceIsSelected()) {
+            // check if it's the same piece as already selected, and if so, deselect it
+            if (tileUnderMouse == m_guiState.selectedPiece->getPositionFromBoard()) {
+                m_guiState.deselectPiece();
+            }
+
+            // if a blank tile was clicked
+            else if (!m_board.getPieceAt(tileUnderMouse)) {
+                auto requestedMove = ChessMove {
+                    m_guiState.selectedPiece->getPositionFromBoard(),
+                    tileUnderMouse,
+                    MoveType::INTO_EMPTY
+                };
+
+                // chess pieces available moves just tells you what moves are available
+                // board filters those moves with
+                // legalMovesAvailableTo();
+                if (m_board.moveIsLegalFor(m_guiState.activePlayer, requestedMove)) {
+                    m_board.executeMove(requestedMove);
+                    m_guiState.deselectPiece();
+                } else {
+                    m_guiState.deselectPiece();
+                }
+
+
+            }
+
+            // if no piece is selected
+            else {
+                // if the tile has a piece, select it
+                if(m_board.getPieceAt(tileUnderMouse)) {
+                    m_guiState.selectPiece(m_board.getPieceAt(tileUnderMouse));
+                }
+
+                // if there's no piece, don't select anything
+            }
+
+
+        // if no piece is already selected
+        } else {
+            if(m_board.pieceExistsAt( tileUnderMouse )) {
+                m_guiState.selectedPiece = m_board.getPieceAt(tileUnderMouse);
+                m_guiState.positionOfSelectedPiece = tileUnderMouse;
+
+                // another consideration needs to be added here - what if you click on a piece that has no possible moves?
+                // Maybe we don't want to select it in that case since it would be hard to "deselect" if you cant tell which it is!
+
+            } else if (m_board.pieceExistsAt(tileUnderMouse) && m_guiState.selectedPiece != nullptr) {
+                m_guiState.selectedPiece = m_board.getPieceAt(tileUnderMouse);
+                m_guiState.positionOfSelectedPiece = tileUnderMouse;
+            }
         }
 }
 

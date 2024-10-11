@@ -18,6 +18,8 @@ public:
     [[nodiscard]] std::vector<Vector2i> getMoveDirections() const override;
 
     [[nodiscard]] PieceType getPieceType() const override;
+
+    [[nodiscard]] std::shared_ptr<Piece> xerox() const override { return std::make_shared<PieceRook>(*this); }
 };
 
 
