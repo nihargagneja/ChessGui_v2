@@ -25,18 +25,22 @@ struct ChessMove {
 public:
     Vector2i startPosition;
     Vector2i endPosition;
-    MoveType type;
+    MoveType moveType;
+    PieceType movingPieceType;
+    PieceColor movingPieceColor;
+    std::optional<PieceType> capturedPieceType;
+    std::optional<PieceType> capturedPieceColor;
 
     // Utility functions
     bool operator==(const ChessMove &other) const {
         return  startPosition == other.startPosition &&
                 endPosition   == other.endPosition &&
-                type          == other.type;
+                moveType          == other.moveType;
     }
 
     [[nodiscard]] std::string toString() const {
         std::string moveTypeStr;
-        switch (type) {
+        switch (moveType) {
             case MoveType::INTO_EMPTY: moveTypeStr = "INTO_EMPTY"; break;
             case MoveType::CAPTURE: moveTypeStr = "CAPTURE"; break;
             case MoveType::CASTLE: moveTypeStr = "CASTLE"; break;

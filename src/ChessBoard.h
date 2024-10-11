@@ -29,22 +29,21 @@ public:
     // QUERYING PIECES AND POSITIONS OF PIECES
     [[nodiscard]] bool pieceExistsAt(Vector2i position) const;
     [[nodiscard]] bool pieceExistsAt(int x, int y) const;
-    [[nodiscard]] Piece* getPieceAt(Vector2i position) const;
-    [[nodiscard]] Piece* getPieceAt(int x, int y) const;
-    [[nodiscard]] Piece* getPieceByID(int id) const;
+    [[nodiscard]] std::shared_ptr<Piece> getPieceAt(Vector2i position) const;
+    [[nodiscard]] std::shared_ptr<Piece> getPieceAt(int x, int y) const;
+    [[nodiscard]] std::shared_ptr<Piece> getPieceByID(int id) const;
     [[nodiscard]] Vector2i getPiecePositionByID(int id) const;
     [[nodiscard]] std::vector<Vector2i> getPositionsOf(PieceType pieceType, PieceColor pieceColor) const;
 
     // QUERYING CHECKS AND MOVE LEGALITY
     [[nodiscard]] bool moveWillCheckKing(const ChessMove &move, PieceColor kingColor) const;
     [[nodiscard]] bool kingIsChecked(PieceColor kingColor) const;
-    [[nodiscard]] bool moveIsLegalFor(PieceColor color, const ChessMove& move) const;
 
-    void printToConsole(std::string header) const;
+    void printToConsole(const std::string& header) const;
     void executeMove(const ChessMove& move); // should be made private probably
-    std::vector<ChessMove> legalMovesAvailableTo(const Piece* piece) const;
+    std::vector<ChessMove> legalMovesAvailableTo(const std::shared_ptr<Piece>& piece) const;
 
-    void draw(const Piece *selectedPiece) const;
+    void draw(const std::shared_ptr<Piece>& selectedPiece) const;
     void setUp();
     void generateRandomConfiguration();
 };

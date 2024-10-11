@@ -53,7 +53,7 @@ public:
 
     // information
     [[nodiscard]] virtual PieceType getPieceType() const = 0;
-    [[nodiscard]] bool sameColorAs(const Piece* otherPiece) const;
+    [[nodiscard]] bool sameColorAs(const std::shared_ptr<Piece>& otherPiece) const;
     [[nodiscard]] Vector2i getPositionFromBoard();
 
     // simple getters

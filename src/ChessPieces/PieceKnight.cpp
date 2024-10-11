@@ -9,7 +9,7 @@
 
 #include "ChessBoard.h"
 
-std::vector<ChessMove> PieceKnight::availableMoves(Vector2i position) const {
+std::vector<ChessMove> PieceKnight::availableMoves(const Vector2i position) const {
     std::vector<ChessMove> moves;
 
     Vector2i destinations[8] = {

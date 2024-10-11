@@ -21,19 +21,19 @@
 //  RETRIEVE PIECES &   //
 //  POSITIONS OF PIECES //
 //////////////////////////
-Piece* ChessBoard::getPieceAt(const Vector2i position) const {
+std::shared_ptr<Piece> ChessBoard::getPieceAt(const Vector2i position) const {
     if(!inBounds(position)) {
         throw std::out_of_range("ChessBoard::getPieceAt");
     }
 
-    return m_pieces[position.x][position.y].get();
+    return m_pieces[position.x][position.y];
 }
 
-Piece* ChessBoard::getPieceAt(const int x, const int y) const {
+std::shared_ptr<Piece> ChessBoard::getPieceAt(const int x, const int y) const {
     return getPieceAt(Vector2i{x, y});
 }
 
-Piece* ChessBoard::getPieceByID(const int id) const {
+std::shared_ptr<Piece> ChessBoard::getPieceByID(const int id) const {
     for(int x = 0; x < 8; x++) {
         for(int y = 0; y < 8; y++) {
             auto piece = getPieceAt(Vector2i{x, y});
@@ -84,12 +84,6 @@ bool ChessBoard::inBounds(Vector2i position) {
     return position.x >= 0 && position.x < 8 && position.y >= 0 && position.y < 8;
 }
 
-bool ChessBoard::moveWillCheckKing(const ChessMove &move, const PieceColor kingColor) const {
-    ChessBoard boardAfterMove = *this;
-    boardAfterMove.executeMove(move);
-    if(boardAfterMove.kingIsChecked(kingColor)) { return true; }
-    else { return false; }
-}
 
 bool ChessBoard::kingIsChecked(const PieceColor kingColor) const {
     bool result = false;
@@ -101,7 +95,7 @@ bool ChessBoard::kingIsChecked(const PieceColor kingColor) const {
     // at the kings position and are of type CAPTURE
     // then the king is in check
     for(auto move : getMovesOfAllPieces(!kingColor)) {
-        if(move.endPosition == kingPos && move.type == MoveType::CAPTURE) {
+        if(move.endPosition == kingPos && move.moveType == MoveType::CAPTURE) {
             result = true;
         }
     }
@@ -109,9 +103,7 @@ bool ChessBoard::kingIsChecked(const PieceColor kingColor) const {
     return result;
 }
 
-bool ChessBoard::moveIsLegalFor(const PieceColor color, const ChessMove &move) const {
-    return !moveWillCheckKing(move, color);
-}
+
 
 // this private function does NOT check for if the king cant move there
 // because it is in check. That logic is handled by moveIsLegalFor()
@@ -144,12 +136,12 @@ bool ChessBoard::pieceExistsAt(const int x, const int y) const {
     return pieceExistsAt(Vector2i{x, y});
 }
 
-std::vector<ChessMove> ChessBoard::legalMovesAvailableTo(const Piece *piece) const {
+std::vector<ChessMove> ChessBoard::legalMovesAvailableTo(const std::shared_ptr<Piece>& piece) const {
     const auto movesOfPiece = piece->availableMoves();
     std::vector<ChessMove> legalMovesOfPiece = {};
 
     for (auto move : movesOfPiece) {
-        if(moveIsLegalFor(piece->getColor(), move)) {
+        if(!moveWillCheckKing(move, piece->getColor())) {
             legalMovesOfPiece.push_back(move);
         }
     }
@@ -157,6 +149,12 @@ std::vector<ChessMove> ChessBoard::legalMovesAvailableTo(const Piece *piece) con
     return legalMovesOfPiece;
 }
 
+bool ChessBoard::moveWillCheckKing(const ChessMove &move, const PieceColor kingColor) const {
+    ChessBoard boardAfterMove = *this;
+    boardAfterMove.executeMove(move);
+    if(boardAfterMove.kingIsChecked(kingColor)) { return true; }
+    else { return false; }
+}
 
 ////////////////////////////////
 ///         GAME CORE -       //
@@ -242,16 +240,15 @@ void ChessBoard::generateRandomConfiguration() {
     }
 }
 
-void ChessBoard::draw(const Piece *selectedPiece) const {
+void ChessBoard::draw(const std::shared_ptr<Piece>& selectedPiece) const {
     for(int row = 0;row < 8; ++row) {
         for(int col = 0; col < 8; ++col) {
             // draw tiles
-            Color squareColor = (row + col) % 2 != 0 ? DARKGRAY : WHITE;
+            const Color squareColor = (row + col) % 2 != 0 ? DARKGRAY : WHITE;
             DrawRectangle(col * 100, row * 100, 100, 100, squareColor);
 
             // draw chess piece if there is one
-            auto pieceToDraw = getPieceAt(Vector2i(col, row));
-            if(pieceToDraw != nullptr) {
+            if(const auto pieceToDraw = getPieceAt(Vector2i(col, row))) {
                 DrawText(pieceToDraw->getSymbol().c_str(), col * 100 + 20, row * 100, 100, BEIGE);
             }
         }
@@ -259,26 +256,26 @@ void ChessBoard::draw(const Piece *selectedPiece) const {
 
     if(selectedPiece != nullptr) {
         for (ChessMove move : this->legalMovesAvailableTo(selectedPiece)) {
-            Color squareColor = (move.type == MoveType::CAPTURE) ? Color(ColorAlpha(RED, 0.4f)) : ColorAlpha(GREEN, 0.4f);
+            Color squareColor = (move.moveType == MoveType::CAPTURE) ? Color(ColorAlpha(RED, 0.4f)) : ColorAlpha(GREEN, 0.4f);
             DrawRectangle(move.endPosition.x * 100, move.endPosition.y * 100, 100, 100, squareColor);
         }
     }
 }
 
 void ChessBoard::executeMove(const ChessMove& move) {
-    if(move.type == MoveType::INTO_EMPTY) {
+    if(move.moveType == MoveType::INTO_EMPTY) {
         m_pieces[move.endPosition.x][move.endPosition.y] = m_pieces[move.startPosition.x][move.startPosition.y];
         m_pieces[move.startPosition.x][move.startPosition.y] = nullptr;
-    } else if (move.type == MoveType::CAPTURE) {
+    } else if (move.moveType == MoveType::CAPTURE) {
         m_capturedPieces.push_back(m_pieces[move.endPosition.x][move.endPosition.y]);
         m_pieces[move.endPosition.x][move.endPosition.y] = m_pieces[move.startPosition.x][move.startPosition.y];
         m_pieces[move.startPosition.x][move.startPosition.y] = nullptr;
-    } else if (move.type == MoveType::CASTLE) {
+    } else if (move.moveType == MoveType::CASTLE) {
         // need to implement
     }
 }
 
-void ChessBoard::printToConsole(std::string header) const {
+void ChessBoard::printToConsole(const std::string& header) const {
     std::cout << header << "-------------------------" << std::endl;
 
     for (int y = 0; y < 8; ++y) {

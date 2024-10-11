@@ -29,7 +29,7 @@ struct Vector2i {
         return Vector2i {x - other.x, y - other.y};
     }
 
-    bool oppositeTo(const Vector2i & other) const {
+    [[nodiscard]] bool oppositeTo(const Vector2i & other) const {
         return  (this->x == -other.x && this->y ==  other.y) ||
                 (this->x ==  other.x && this->y == -other.y);
     }

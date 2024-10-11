@@ -7,16 +7,16 @@
 
 #include "ChessPieces/Piece.h"
 
-struct GUIState {
-public:
-    Piece* selectedPiece;
-    Vector2i positionOfSelectedPiece;
+class GUIState {
+private:
+    std::shared_ptr<Piece> selectedPiece = nullptr;
     PieceColor activePlayer = PieceColor::WHITE_COLOR;
-    GUIState() : selectedPiece(nullptr) {}
 
+public:
     [[nodiscard]] bool pieceIsSelected() const { return selectedPiece != nullptr; }
-    void selectPiece(Piece* const pieceToSelect) { selectedPiece = pieceToSelect; }
+    void selectPiece(const std::shared_ptr<Piece> &pieceToSelect) { selectedPiece = pieceToSelect; }
     void deselectPiece() { selectedPiece = nullptr; }
+    [[nodiscard]] std::shared_ptr<Piece> getSelectedPiece() const { return selectedPiece; }
 };
 
 
