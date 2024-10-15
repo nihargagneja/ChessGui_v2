@@ -58,11 +58,12 @@ public:
 
     // simple getters
     [[nodiscard]] virtual std::string getSymbol() const = 0;
+    [[nodiscard]] virtual int getPointsValue() const = 0;
     [[nodiscard]] PieceColor getColor() const { return m_color; }
     [[nodiscard]] int getID() const { return m_id; }
 
-    [[nodiscard]] virtual std::vector<ChessMove> availableMoves(Vector2i position) const = 0; // DEPRECATED
-    [[nodiscard]] virtual std::vector<ChessMove> availableMoves() const = 0; // USE THIS AND BOARD FOR POSITION USING ID
+    [[nodiscard]] virtual std::vector<ChessMove> getAvailableMoves(Vector2i position) const = 0; // DEPRECATED
+    [[nodiscard]] virtual std::vector<ChessMove> getAvailableMoves() const = 0; // USE THIS AND QUERY BOARD FOR POSITION USING ID
 };
 
 

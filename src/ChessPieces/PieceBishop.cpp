@@ -21,3 +21,4 @@ PieceType PieceBishop::getPieceType() const {
     return PieceType::BISHOP;
 }
 
+

@@ -2,6 +2,7 @@
 // Created by Nihar Gagneja on 9/30/24.
 //
 
+// ReSharper disable CppUseStructuredBinding
 #include <raylib.h>
 #include "ChessBoard.h"
 
@@ -43,7 +44,8 @@ std::shared_ptr<Piece> ChessBoard::getPieceByID(const int id) const {
         }
     }
 
-    throw std::out_of_range("ChessBoard::getPieceByID");
+    return nullptr;
+    //throw std::out_of_range("ChessBoard::getPieceByID");
 }
 
 Vector2i ChessBoard::getPiecePositionByID(const int id) const {
@@ -55,8 +57,7 @@ Vector2i ChessBoard::getPiecePositionByID(const int id) const {
             }
         }
     }
-
-    throw std::out_of_range("ChessBoard::getPieceByID");
+    return Vector2i{-1, -1};
 }
 
 std::vector<Vector2i> ChessBoard::getPositionsOf(PieceType pieceType, PieceColor pieceColor) const {
@@ -75,57 +76,12 @@ std::vector<Vector2i> ChessBoard::getPositionsOf(PieceType pieceType, PieceColor
 }
 
 
-
-//////////////////
-//    CHECKS   //
-/////////////////
+///////////////////////////////
+//    CHECKS AND GAME LOGIC  //
+///////////////////////////////
 
 bool ChessBoard::inBounds(Vector2i position) {
     return position.x >= 0 && position.x < 8 && position.y >= 0 && position.y < 8;
-}
-
-
-bool ChessBoard::kingIsChecked(const PieceColor kingColor) const {
-    bool result = false;
-
-    // find the kings position on the board
-    Vector2i kingPos = getPositionsOf(PieceType::KING, kingColor).front();
-
-    // if any ChessMoves on board have a destination
-    // at the kings position and are of type CAPTURE
-    // then the king is in check
-    for(auto move : getMovesOfAllPieces(!kingColor)) {
-        if(move.endPosition == kingPos && move.moveType == MoveType::CAPTURE) {
-            result = true;
-        }
-    }
-
-    return result;
-}
-
-
-
-// this private function does NOT check for if the king cant move there
-// because it is in check. That logic is handled by moveIsLegalFor()
-std::vector<ChessMove> ChessBoard::getMovesOfAllPieces(const std::optional<PieceColor> color = std::nullopt) const {
-    std::vector<ChessMove> movesOfAllPieces = {};
-
-    for(int x = 0; x < 8; ++x) {
-        for(int y = 0; y < 8; ++y) {
-            const auto piece = getPieceAt(x, y);
-            // if there's a piece at (x, y)            and (it is the color we are filtering, or we are not filtering by color)
-            if(piece && (piece->getColor() == color || color == std::nullopt)) {
-                std::vector<ChessMove> movesOfPiece = piece->availableMoves();
-                movesOfAllPieces.insert(
-                    movesOfAllPieces.end(),
-                    movesOfPiece.begin(),
-                    movesOfPiece.end()
-                );
-            }
-        }
-    }
-
-    return movesOfAllPieces;
 }
 
 bool ChessBoard::pieceExistsAt(const Vector2i position) const {
@@ -136,25 +92,68 @@ bool ChessBoard::pieceExistsAt(const int x, const int y) const {
     return pieceExistsAt(Vector2i{x, y});
 }
 
-std::vector<ChessMove> ChessBoard::legalMovesAvailableTo(const std::shared_ptr<Piece>& piece) const {
-    const auto movesOfPiece = piece->availableMoves();
-    std::vector<ChessMove> legalMovesOfPiece = {};
+std::vector<ChessMove> ChessBoard::legalMovesOf(const std::shared_ptr<Piece>& piece) const {
+    std::vector<ChessMove> legalMoves;
 
-    for (auto move : movesOfPiece) {
-        if(!moveWillCheckKing(move, piece->getColor())) {
-            legalMovesOfPiece.push_back(move);
+    const auto movesOfPiece = piece->getAvailableMoves();
+    for(auto move : movesOfPiece) {
+        if (moveIsLegalFor(piece->getColor(), move)) {
+            legalMoves.push_back(move);
         }
     }
 
-    return legalMovesOfPiece;
+    return legalMoves;
 }
 
-bool ChessBoard::moveWillCheckKing(const ChessMove &move, const PieceColor kingColor) const {
+
+bool ChessBoard::moveIsLegalFor(const PieceColor color, const ChessMove &move) const {
     ChessBoard boardAfterMove = *this;
     boardAfterMove.executeMove(move);
-    if(boardAfterMove.kingIsChecked(kingColor)) { return true; }
-    else { return false; }
+    boardAfterMove.printToConsole("HEADER");
+
+    if(kingIsCheckedInBoard(boardAfterMove, color)) {
+        return false;
+    }
+
+    return true;
 }
+
+bool ChessBoard::kingIsCheckedInBoard(const ChessBoard& givenBoard, const PieceColor kingColor) {
+    const auto locateKingInGivenBoard = givenBoard.getPositionsOf(PieceType::KING, kingColor);
+    if(locateKingInGivenBoard.empty()) return false; // protects against crash if no king, though this shouldn't happen in the game
+
+    const auto kingPosition = locateKingInGivenBoard.front();
+
+    std::vector<ChessMove> movesOfAllPieces = getMovesOfAllPiecesInBoard(givenBoard, !kingColor);
+    for (const auto& move : movesOfAllPieces) {
+        if (move.endPosition == kingPosition && move.moveType == MoveType::CAPTURE) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::vector<ChessMove> ChessBoard::getMovesOfAllPiecesInBoard(const ChessBoard& givenBoard, const std::optional<PieceColor> color) {
+    std::vector<ChessMove> moves = {};
+
+    for (int x = 0; x < 8; ++x) {
+        for (int y = 0; y < 8; ++y) {
+            auto piece = givenBoard.getPieceAt(x, y);
+            if (piece != nullptr && (color == std::nullopt || piece->getColor() == color.value())) {
+                auto availableMovesForPiece = givenBoard.getPieceAt(x, y)->getAvailableMoves();
+                moves.insert(
+                    moves.end(),
+                    availableMovesForPiece.begin(),
+                    availableMovesForPiece.end()
+                );
+            }
+        }
+    }
+
+    return moves;
+}
+
+
 
 ////////////////////////////////
 ///         GAME CORE -       //
@@ -169,41 +168,70 @@ void ChessBoard::setUp() {
         }
     }
 
-    // // BLACK BACK ROW (Fancy Guys)
-    m_pieces[0][0] = std::make_shared<PieceRook>      (PieceColor::BLACK_COLOR, this);
-    m_pieces[1][0] = std::make_shared<PieceKnight>    (PieceColor::BLACK_COLOR, this);
-    m_pieces[2][0] = std::make_shared<PieceBishop>    (PieceColor::BLACK_COLOR, this);
-    m_pieces[3][0] = std::make_shared<PieceQueen>     (PieceColor::BLACK_COLOR, this);
-    // m_pieces[4][0] = std::make_shared<PieceKing>      (PieceColor::BLACK_COLOR, this);
-    m_pieces[5][0] = std::make_shared<PieceBishop>    (PieceColor::BLACK_COLOR, this);
-    m_pieces[6][0] = std::make_shared<PieceKnight>    (PieceColor::BLACK_COLOR, this);
-    m_pieces[7][0] = std::make_shared<PieceRook>      (PieceColor::BLACK_COLOR, this);
+    m_pieces[0][1] = std::make_shared<PieceRook>    (PieceColor::BLACK_COLOR, this);
+    m_pieces[2][2] = std::make_shared<PieceKing>    (PieceColor::WHITE_COLOR, this);
 
-    // BLACK FRONT ROW (Pawns)
-    for (int x = 0; x < 8; x++) {
-        m_pieces[x][1] = std::make_shared<PiecePawn>  (PieceColor::BLACK_COLOR, this);
-    }
 
-    // WHITE FRONT ROW (Pawns)
-    for (int x = 0; x < 8; x++) {
-        m_pieces[x][6] = std::make_shared<PiecePawn>(PieceColor::WHITE_COLOR, this);
-    }
-
-    // WHITE BACK ROW (Fancy Guys)
-    m_pieces[0][7] = std::make_shared<PieceRook>      (PieceColor::WHITE_COLOR, this);
-    m_pieces[1][7] = std::make_shared<PieceKnight>    (PieceColor::WHITE_COLOR, this);
-    m_pieces[2][7] = std::make_shared<PieceBishop>    (PieceColor::WHITE_COLOR, this);
-    m_pieces[3][7] = std::make_shared<PieceQueen>     (PieceColor::WHITE_COLOR, this);
-    // m_pieces[4][7] = std::make_shared<PieceKing>      (PieceColor::WHITE_COLOR, this);
-    m_pieces[5][7] = std::make_shared<PieceBishop>    (PieceColor::WHITE_COLOR, this);
-    m_pieces[6][7] = std::make_shared<PieceKnight>    (PieceColor::WHITE_COLOR, this);
-    m_pieces[7][7] = std::make_shared<PieceRook>      (PieceColor::WHITE_COLOR, this);
-
-    m_pieces[4][4] = std::make_shared<PieceBishop>     (PieceColor::BLACK_COLOR, this);
-    m_pieces[3][3] = std::make_shared<PieceKing>      (PieceColor::BLACK_COLOR, this);
-    m_pieces[6][3] = std::make_shared<PieceKing>      (PieceColor::WHITE_COLOR, this);
+    //
+    // // m_pieces[3][3] = std::make_shared<PieceKing>  (PieceColor::WHITE_COLOR, this);
+    // // m_pieces[1][1] = std::make_shared<PieceBishop>  (PieceColor::BLACK_COLOR, this);
+    //
+    // // // BLACK BACK ROW (Fancy Guys)
+    // m_pieces[0][0] = std::make_shared<PieceRook>      (PieceColor::BLACK_COLOR, this);
+    // m_pieces[1][0] = std::make_shared<PieceKnight>    (PieceColor::BLACK_COLOR, this);
+    // m_pieces[2][0] = std::make_shared<PieceBishop>    (PieceColor::BLACK_COLOR, this);
+    // m_pieces[3][0] = std::make_shared<PieceQueen>     (PieceColor::BLACK_COLOR, this);
+    // // m_pieces[4][0] = std::make_shared<PieceKing>      (PieceColor::BLACK_COLOR, this);
+    // m_pieces[5][0] = std::make_shared<PieceBishop>    (PieceColor::BLACK_COLOR, this);
+    // m_pieces[6][0] = std::make_shared<PieceKnight>    (PieceColor::BLACK_COLOR, this);
+    // m_pieces[7][0] = std::make_shared<PieceRook>      (PieceColor::BLACK_COLOR, this);
+    //
+    // // BLACK FRONT ROW (Pawns)
+    // for (int x = 0; x < 8; x++) {
+    //     m_pieces[x][1] = std::make_shared<PiecePawn>  (PieceColor::BLACK_COLOR, this);
+    // }
+    //
+    // // WHITE FRONT ROW (Pawns)
+    // for (int x = 0; x < 8; x++) {
+    //     m_pieces[x][6] = std::make_shared<PiecePawn>(PieceColor::WHITE_COLOR, this);
+    // }
+    //
+    //
+    //
+    // // WHITE BACK ROW (Fancy Guys)
+    // m_pieces[0][7] = std::make_shared<PieceRook>      (PieceColor::WHITE_COLOR, this);
+    // m_pieces[1][7] = std::make_shared<PieceKnight>    (PieceColor::WHITE_COLOR, this);
+    // m_pieces[2][7] = std::make_shared<PieceBishop>    (PieceColor::WHITE_COLOR, this);
+    // m_pieces[3][7] = std::make_shared<PieceQueen>     (PieceColor::WHITE_COLOR, this);
+    // // m_pieces[4][7] = std::make_shared<PieceKing>      (PieceColor::WHITE_COLOR, this);
+    // m_pieces[5][7] = std::make_shared<PieceBishop>    (PieceColor::WHITE_COLOR, this);
+    // m_pieces[6][7] = std::make_shared<PieceKnight>    (PieceColor::WHITE_COLOR, this);
+    // m_pieces[7][7] = std::make_shared<PieceRook>      (PieceColor::WHITE_COLOR, this);
+    //
+    // m_pieces[4][4] = std::make_shared<PieceBishop>     (PieceColor::BLACK_COLOR, this);
+    // m_pieces[3][3] = std::make_shared<PieceKing>      (PieceColor::BLACK_COLOR, this);
+    // m_pieces[6][3] = std::make_shared<PieceKing>      (PieceColor::WHITE_COLOR, this);
+    //
+    // m_pieces[3][6] = nullptr;
+    // m_pieces[5][3] = std::make_shared<PiecePawn>(PieceColor::WHITE_COLOR, this);
 
 }
+
+
+// NOT DONE
+void ChessBoard::initializeBoardFromString(const std::string& str) {
+    std::string layout =
+        "rkbqwbkr\n"
+        "pppppppp\n"
+        "--------\n"
+        "--------\n"
+        "--------\n"
+        "--------\n"
+        "PPPPPPPP\n"
+        "RKBQWBKR\n";
+
+}
+
 
 void ChessBoard::generateRandomConfiguration() {
     for (auto & row : m_pieces) {
@@ -240,7 +268,7 @@ void ChessBoard::generateRandomConfiguration() {
     }
 }
 
-void ChessBoard::draw(const std::shared_ptr<Piece>& selectedPiece) const {
+void  ChessBoard::draw(const std::shared_ptr<Piece>& selectedPiece) const {
     for(int row = 0;row < 8; ++row) {
         for(int col = 0; col < 8; ++col) {
             // draw tiles
@@ -254,14 +282,21 @@ void ChessBoard::draw(const std::shared_ptr<Piece>& selectedPiece) const {
         }
     }
 
-    if(selectedPiece != nullptr) {
-        for (ChessMove move : this->legalMovesAvailableTo(selectedPiece)) {
-            Color squareColor = (move.moveType == MoveType::CAPTURE) ? Color(ColorAlpha(RED, 0.4f)) : ColorAlpha(GREEN, 0.4f);
+
+
+    if(selectedPiece) {
+        for(const ChessMove& move : legalMovesOf(selectedPiece)) {
+            const Color squareColor = (move.moveType == MoveType::CAPTURE) ? Color(ColorAlpha(RED, 0.4f)) : ColorAlpha(GREEN, 0.4f);
             DrawRectangle(move.endPosition.x * 100, move.endPosition.y * 100, 100, 100, squareColor);
         }
     }
+
+    // if(kingIsChecked(PieceColor::WHITE_COLOR)) {
+    //     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Color(255, 0, 0, 50));
+    // }
 }
 
+// Function is "dumb." It assumes the move it has been provided is valid/legal
 void ChessBoard::executeMove(const ChessMove& move) {
     if(move.moveType == MoveType::INTO_EMPTY) {
         m_pieces[move.endPosition.x][move.endPosition.y] = m_pieces[move.startPosition.x][move.startPosition.y];
@@ -293,6 +328,14 @@ void ChessBoard::printToConsole(const std::string& header) const {
 ///   DEEP COPIES   //
 //////////////////////
 ChessBoard::ChessBoard(const ChessBoard &other) {
+    m_capturedPieces.clear();
+
+    for (auto& pieceColumn : m_pieces) {
+        for (auto& piece : pieceColumn) {
+            piece = nullptr;
+        }
+    }
+
     // deep copy pieces array
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -306,8 +349,14 @@ ChessBoard::ChessBoard(const ChessBoard &other) {
     }
 }
 
-ChessBoard & ChessBoard::operator=(const ChessBoard &other) {
-    if (this == &other) return *this; // Handle self-assignment
+ChessBoard& ChessBoard::operator=(const ChessBoard &other) {
+    if (this == &other) return *this; // self-assignment
+
+    for (auto& pieceColumn : m_pieces) {
+        for (auto& piece : pieceColumn) {
+            piece = nullptr;
+        }
+    }
 
     // Clear current state
     m_capturedPieces.clear();

@@ -15,8 +15,8 @@ protected:
 public:
     PieceSliding(const PieceColor color, const ChessBoard* board) : Piece(color, board) {};
     [[nodiscard]] virtual std::vector<Vector2i> getMoveDirections() const = 0;
-    [[nodiscard]] std::vector<ChessMove> availableMoves(Vector2i position) const override; // DEPRECATED
-    [[nodiscard]] std::vector<ChessMove> availableMoves() const override;
+    [[nodiscard]] std::vector<ChessMove> getAvailableMoves(Vector2i position) const override; // DEPRECATED
+    [[nodiscard]] std::vector<ChessMove> getAvailableMoves() const override;
 };
 
 

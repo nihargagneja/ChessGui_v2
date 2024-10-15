@@ -14,8 +14,12 @@ private:
     std::shared_ptr<Piece> m_pieces[8][8];
     std::vector<std::shared_ptr<Piece>> m_capturedPieces = {};
 
-    // does NOT check whether these moves ar legal (i.e. king is checked after making move or not)
-    [[nodiscard]] std::vector<ChessMove> getMovesOfAllPieces(std::optional<PieceColor> color) const;
+
+    [[nodiscard]] static std::vector<ChessMove> getMovesOfAllPiecesInBoard(const ChessBoard& givenBoard, std::optional<PieceColor> color);
+
+    [[nodiscard]] static bool kingIsCheckedInBoard(const ChessBoard& givenBoard, PieceColor kingColor);
+
+    [[nodiscard]] bool moveIsLegalFor(PieceColor color, const ChessMove & move) const;
 
 public:
     // DEEP COPIES
@@ -36,15 +40,17 @@ public:
     [[nodiscard]] std::vector<Vector2i> getPositionsOf(PieceType pieceType, PieceColor pieceColor) const;
 
     // QUERYING CHECKS AND MOVE LEGALITY
-    [[nodiscard]] bool moveWillCheckKing(const ChessMove &move, PieceColor kingColor) const;
-    [[nodiscard]] bool kingIsChecked(PieceColor kingColor) const;
+    [[nodiscard]] std::vector<ChessMove> legalMovesOf(const std::shared_ptr<Piece>& piece) const;
+
 
     void printToConsole(const std::string& header) const;
-    void executeMove(const ChessMove& move); // should be made private probably
-    std::vector<ChessMove> legalMovesAvailableTo(const std::shared_ptr<Piece>& piece) const;
+    void executeMove(const ChessMove& move);
 
     void draw(const std::shared_ptr<Piece>& selectedPiece) const;
     void setUp();
+
+    void initializeBoardFromString(const std::string &str);
+
     void generateRandomConfiguration();
 };
 

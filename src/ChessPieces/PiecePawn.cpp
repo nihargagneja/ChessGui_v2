@@ -7,7 +7,7 @@
 
 #include <vector>
 
-std::vector<ChessMove> PiecePawn::availableMoves() const {
+std::vector<ChessMove> PiecePawn::getAvailableMoves() const {
     std::vector<ChessMove> moves;
     const Vector2i position = m_board->getPiecePositionByID(m_id);
 
@@ -67,7 +67,7 @@ std::vector<ChessMove> PiecePawn::availableMoves() const {
 
 // DEPRECATED - instead, use overload without any parameters and have the chess piece query its own
 // position from the board using its id
-std::vector<ChessMove> PiecePawn::availableMoves(Vector2i position) const {
+std::vector<ChessMove> PiecePawn::getAvailableMoves(const Vector2i position) const {
     std::vector<ChessMove> moves;
 
     // FORWARD MOVE BY ONE IF POSSIBLE

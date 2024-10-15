@@ -9,7 +9,7 @@
 
 
 // DEPRECATED: PIECES NOW QUERY THE BOARD FOR THEIR POSITION USING THEIR ID
-std::vector<ChessMove> PieceSliding::availableMoves(Vector2i position) const {
+std::vector<ChessMove> PieceSliding::getAvailableMoves(Vector2i position) const {
     std::vector<ChessMove> moves = {};
 
     for (auto moveDir : getMoveDirections()) {
@@ -47,7 +47,7 @@ std::vector<ChessMove> PieceSliding::availableMoves(Vector2i position) const {
     return moves;
 }
 
-std::vector<ChessMove> PieceSliding::availableMoves() const {
+std::vector<ChessMove> PieceSliding::getAvailableMoves() const {
     std::vector<ChessMove> moves = {};
     auto positionOnBoard = m_board->getPiecePositionByID(m_id);
 

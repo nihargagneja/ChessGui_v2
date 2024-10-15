@@ -26,10 +26,10 @@ public:
     Vector2i startPosition;
     Vector2i endPosition;
     MoveType moveType;
-    PieceType movingPieceType;
-    PieceColor movingPieceColor;
-    std::optional<PieceType> capturedPieceType;
-    std::optional<PieceType> capturedPieceColor;
+    // PieceType movingPieceType;
+    // PieceColor movingPieceColor;
+    // std::optional<PieceType> capturedPieceType;
+    // std::optional<PieceType> capturedPieceColor;
 
     // Utility functions
     bool operator==(const ChessMove &other) const {

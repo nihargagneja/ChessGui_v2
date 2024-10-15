@@ -22,8 +22,8 @@ void ChessGame::initGame() {
 
     m_board.setUp();
 
-    auto move = ChessMove{3, 3, 4, 4, MoveType::CAPTURE};
-    m_board.executeMove(move);
+    // auto move = ChessMove{3, 3, 4, 4, MoveType::CAPTURE};
+    // m_board.executeMove(move);
 }
 
 void ChessGame::gameLoop() {
@@ -44,7 +44,7 @@ void ChessGame::update() {
     // check the game state - checks winner loser
 }
 
-void ChessGame::draw() const {
+void ChessGame::draw() {
     m_board.draw(m_guiState.getSelectedPiece()); // draw the chess board
 
     // draw other things - timer, etc
@@ -62,32 +62,37 @@ void ChessGame::onMouseLeftClick() {
     std::cout << tileUnderMouse.x << " " << tileUnderMouse.y << std::endl;
 
     auto pieceClickedOn = m_board.getPieceAt(tileUnderMouse);
+    auto pieceAlreadySelected = m_guiState.getSelectedPiece();
 
-    // if clicked on a piece and no piece selected, select it
-    if(pieceClickedOn && !m_guiState.pieceIsSelected()) {
+    // if no piece selected, and clicking on an empty square, we're done.
+    if(!pieceAlreadySelected && !pieceClickedOn) {
+        return;
+    }
+
+    // if no piece is selected, and we click on a piece, select it, and we're done.
+    if(!pieceAlreadySelected && pieceClickedOn) {
         m_guiState.selectPiece(pieceClickedOn);
+        return;
     }
 
-    // if clicked on a piece and a piece is already selected
-    else if(pieceClickedOn && m_guiState.pieceIsSelected()) {
-        // if they clicked on the piece that's already selected, deselect it
-        if (pieceClickedOn->getPositionFromBoard() == tileUnderMouse) {
-            m_guiState.deselectPiece();
-        }
-    }
-
-    else if (!pieceClickedOn && m_guiState.pieceIsSelected()) {
-        std::cout << "reached here" ;
-        // go through the valid moves for the selected piece and find a match based on the destination tile only
-        for (auto validMove : m_board.legalMovesAvailableTo(m_guiState.getSelectedPiece())) {
-            if (validMove.endPosition == tileUnderMouse) {
-                std::cout << "valid move executing";
-                m_board.executeMove(validMove);
-                break;
-            }
-        }
+    // if piece selected and click on the same piece, deselect it, and we're done. This logic should actually already be
+    // covered by the legalMovesAvailableTo() logic, but it has been helpful to isolate this case when debugging.
+    if(pieceAlreadySelected && pieceClickedOn && (pieceClickedOn->getID() == pieceAlreadySelected->getID())) {
         m_guiState.deselectPiece();
+        return;
     }
+
+    // if a piece is already selected, look for a matching move and execute it if there is one
+    // otherwise just deselect the piece
+    auto movesAvailableToSelectedPiece = m_board.legalMovesOf(pieceAlreadySelected);
+    for (auto move : movesAvailableToSelectedPiece) {
+        if (move.endPosition == tileUnderMouse) {
+            m_board.executeMove(move);
+            break;
+        }
+    }
+    m_guiState.deselectPiece();
+    return;
 }
 
 void ChessGame::terminateGame() {

@@ -21,7 +21,7 @@ private:
 
     // internal functions used to run the game
     void initGame();
-    void draw() const;
+    void draw();
 
     // input processing
     void processInput();

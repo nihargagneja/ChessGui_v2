@@ -9,7 +9,7 @@
 
 #include "ChessBoard.h"
 
-std::vector<ChessMove> PieceKing::availableMoves(Vector2i position) const {
+std::vector<ChessMove> PieceKing::getAvailableMoves(Vector2i position) const {
     std::vector<ChessMove> moves;
 
     Vector2i destinations[8] = {
@@ -45,7 +45,7 @@ std::vector<ChessMove> PieceKing::availableMoves(Vector2i position) const {
     return moves;
 }
 
-std::vector<ChessMove> PieceKing::availableMoves() const {
+std::vector<ChessMove> PieceKing::getAvailableMoves() const {
     std::vector<ChessMove> moves;
 
     auto position = m_board->getPiecePositionByID(m_id);
@@ -61,7 +61,7 @@ std::vector<ChessMove> PieceKing::availableMoves() const {
         Vector2i(position.x - 1, position.y + 0)
     };
 
-    for (auto dest : destinations) {
+    for (const auto dest : destinations) {
         // bounds check before we check the tile
         if(!ChessBoard::inBounds(dest)) continue;
         auto otherPiece = m_board->getPieceAt(dest);

@@ -33,6 +33,10 @@ struct Vector2i {
         return  (this->x == -other.x && this->y ==  other.y) ||
                 (this->x ==  other.x && this->y == -other.y);
     }
+
+    std::string toString() const {
+        return std::to_string(x) + ", " + std::to_string(y);
+    }
 };
 
 #endif //VECTOR2I_H

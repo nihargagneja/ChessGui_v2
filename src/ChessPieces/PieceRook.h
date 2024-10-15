@@ -19,7 +19,11 @@ public:
 
     [[nodiscard]] PieceType getPieceType() const override;
 
-    [[nodiscard]] std::shared_ptr<Piece> xerox() const override { return std::make_shared<PieceRook>(*this); }
+    [[nodiscard]] std::shared_ptr<Piece> xerox() const override {
+        return std::make_shared<PieceRook>(*this);
+    }
+
+    [[nodiscard]] int getPointsValue() const override { return 5; }
 };
 
 
